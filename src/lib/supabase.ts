@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -13,7 +13,9 @@ if (supabaseUrl && supabaseAnonKey) {
   // Fornecemos fallbacks para que a UI continue funcionando sem Supabase.
   // Isso evita a tela em branco quando as variáveis não estão configuradas.
   // eslint-disable-next-line no-console
-  console.warn('Supabase environment variables not set — using local fallbacks.');
+  console.warn(
+    "Supabase environment variables not set — using local fallbacks."
+  );
 }
 
 export const supabase = _supabase as ReturnType<typeof createClient> | null;
@@ -32,16 +34,18 @@ export const saveRanking = async (ranking: QuizRanking) => {
   if (!supabase) {
     // Fallback persistente: salva no localStorage para testes locais
     // eslint-disable-next-line no-console
-    console.warn('saveRanking called but Supabase is not initialized. Saving to localStorage fallback.');
+    console.warn(
+      "saveRanking called but Supabase is not initialized. Saving to localStorage fallback."
+    );
 
     try {
-      const raw = localStorage.getItem('quiz_rankings_local');
+      const raw = localStorage.getItem("quiz_rankings_local");
       const list: QuizRanking[] = raw ? JSON.parse(raw) : [];
 
       const entry: QuizRanking = {
         ...ranking,
-        id: 'local-' + Date.now(),
-        created_at: new Date().toISOString()
+        id: "local-" + Date.now(),
+        created_at: new Date().toISOString(),
       };
 
       list.push(entry);
@@ -52,22 +56,22 @@ export const saveRanking = async (ranking: QuizRanking) => {
         return a.time_taken - b.time_taken;
       });
 
-      localStorage.setItem('quiz_rankings_local', JSON.stringify(list));
+      localStorage.setItem("quiz_rankings_local", JSON.stringify(list));
 
       return entry;
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('Error saving ranking to localStorage:', err);
+      console.error("Error saving ranking to localStorage:", err);
       return {
         ...ranking,
-        id: 'local-error-' + Date.now(),
-        created_at: new Date().toISOString()
+        id: "local-error-" + Date.now(),
+        created_at: new Date().toISOString(),
       } as QuizRanking;
     }
   }
 
   const { data, error } = await supabase
-    .from('quiz_rankings')
+    .from("quiz_rankings")
     .insert([ranking])
     .select()
     .maybeSingle();
@@ -81,10 +85,12 @@ export const getTopRankings = async (limit: number = 10) => {
     // Fallback persistente: usa localStorage para armazenar rankings localmente
     // Isso permite visualizar um leaderboard entre recarregamentos sem Supabase.
     // eslint-disable-next-line no-console
-    console.warn('getTopRankings called but Supabase is not initialized. Using localStorage fallback.');
+    console.warn(
+      "getTopRankings called but Supabase is not initialized. Using localStorage fallback."
+    );
 
     try {
-      const raw = localStorage.getItem('quiz_rankings_local');
+      const raw = localStorage.getItem("quiz_rankings_local");
       const list: QuizRanking[] = raw ? JSON.parse(raw) : [];
 
       // Ordena: maior score primeiro, menor time_taken primeiro
@@ -96,16 +102,16 @@ export const getTopRankings = async (limit: number = 10) => {
       return list.slice(0, limit);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('Error reading local rankings:', err);
+      console.error("Error reading local rankings:", err);
       return [] as QuizRanking[];
     }
   }
 
   const { data, error } = await supabase
-    .from('quiz_rankings')
-    .select('*')
-    .order('score', { ascending: false })
-    .order('time_taken', { ascending: true })
+    .from("quiz_rankings")
+    .select("*")
+    .order("score", { ascending: false })
+    .order("time_taken", { ascending: true })
     .limit(limit);
 
   if (error) throw error;
